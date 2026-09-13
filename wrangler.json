@@ -26,10 +26,18 @@
   ],
   "ratelimits": [
     {
+      "name": "EXTERNAL_RATE_LIMITER",
+      "namespace_id": "839204",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    },
+    {
       "name": "API_RATE_LIMITER",
       "namespace_id": "839201",
       "simple": {
-        "limit": 120,
+        "limit": 60,
         "period": 60
       }
     },

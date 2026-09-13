@@ -5,6 +5,7 @@ import { sValidator } from "@hono/standard-validator";
 import { codeParamSchema, getLocationByCodeDoc } from "./code.schema";
 import { dbClient } from "~/db";
 import { addCache } from "~/utils/cache";
+import { EXTERNAL_RESULT_LIMIT } from "~/utils/request-policy";
 
 const codeRouter = new Hono<{ Bindings: Env }>();
 
@@ -20,7 +21,9 @@ codeRouter.get(
     const code = c.req.param("code");
     const db = dbClient(c.env);
 
-    const location = await getLocationByCode(db, code);
+    const location = await getLocationByCode(
+      db, code, EXTERNAL_RESULT_LIMIT,
+    );
 
     if (!location) {
       return c.json({ error: "Location not found" }, 404);

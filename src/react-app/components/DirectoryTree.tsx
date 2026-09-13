@@ -11,8 +11,10 @@ import {
   Home,
   ExternalLink,
 } from "lucide-react";
-import { AdministrativeUnit, ResponseByCode, Type } from "@/types";
+import { AdministrativeUnit, Type } from "@/types";
 import { getEnglishName, getKhmerName } from "@/libs/name";
+
+import { fetchChildPage } from "@/libs/apiClient";
 
 interface DirectoryTreeProps {
   items: AdministrativeUnit[];
@@ -53,6 +55,26 @@ function DirectoryItem({ unit, level }: DirectoryItemProps) {
   const [children, setChildren] = useState<AdministrativeUnit[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadChildren = async (): Promise<void> => {
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetchChildPage(unit.code, unit.type, page + 1);
+      setChildren((previous) => [...previous, ...result.data]);
+      setPage(result.pagination.page);
+      setHasNextPage(result.pagination.hasNextPage);
+      setHasLoaded(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to load sub-locations.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Determine if this unit can have children (Villages are leaf nodes)
   const isLeaf = unit.type === Type.VILLAGE;
@@ -76,24 +98,7 @@ function DirectoryItem({ unit, level }: DirectoryItemProps) {
 
     setIsOpen(true);
 
-    if (!hasLoaded) {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/v1/code/${unit.code}`);
-        const data: ResponseByCode = await res.json();
-        if (data.children) {
-          const sortedChildren = data.children.sort(
-            (a, b) => Number(a.code) - Number(b.code),
-          );
-          setChildren(sortedChildren);
-        }
-        setHasLoaded(true);
-      } catch (error) {
-        console.error("Failed to load children", error);
-      } finally {
-        setLoading(false);
-      }
-    }
+    if (!hasLoaded) await loadChildren();
   };
 
   const padLeft = level * 32 + 20; // Increased indentation for better visual hierarchy
@@ -178,7 +183,7 @@ function DirectoryItem({ unit, level }: DirectoryItemProps) {
             children.map((child) => (
               <DirectoryItem key={child.code} unit={child} level={level + 1} />
             ))
-          ) : loading ? null : (
+          ) : loading || error ? null : (
             <div
               className="py-4 text-sm text-slate-400 italic flex items-center gap-2"
               style={{ paddingLeft: `${padLeft + 48}px` }}
@@ -186,6 +191,13 @@ function DirectoryItem({ unit, level }: DirectoryItemProps) {
               <div className="w-4 h-px bg-slate-200" />
               No items found
             </div>
+          )}
+          {error && <p role="alert" className="px-6 py-2 text-sm text-red-600">{error}</p>}
+          {(hasNextPage || error) && (
+            <button type="button" disabled={loading} onClick={() => void loadChildren()}
+              className="m-4 px-4 py-2 text-brand-700 border border-slate-200 rounded-lg disabled:opacity-40">
+              {loading ? "Loading…" : error ? "Retry" : "Load more"}
+            </button>
           )}
         </div>
       )}

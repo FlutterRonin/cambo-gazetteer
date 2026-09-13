@@ -1,10 +1,10 @@
 import { calculateOffset, createPaginatedResponse } from "~/utils/pagination";
 import { AutocompleteResponse, PaginatedSearchResponse } from "~/types";
 import {
-  fuzzySearchCount,
   searchWithHierarchy,
   autocompleteSearch,
 } from "~/db/queries";
+import { getSearchCount } from "~/utils/search-count";
 import { type DatabaseType } from "~/db";
 
 /**
@@ -19,10 +19,10 @@ export async function search(
   const offset = calculateOffset(page, limit);
 
   // Get total count for pagination
-  const total = await fuzzySearchCount(db, query);
+  const total = await getSearchCount(db, query);
 
   // Get paginated results
-  const data = await searchWithHierarchy(db, query, limit, offset);
+  const data = offset >= total ? [] : await searchWithHierarchy(db, query, limit, offset);
 
   return {
     query,

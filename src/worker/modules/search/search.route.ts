@@ -11,6 +11,7 @@ import {
 } from "./search.schema";
 import { sValidator } from "@hono/standard-validator";
 import { addSearchCache } from "~/utils/cache";
+import { getRequestMaxLimit } from "~/utils/request-policy";
 
 const searchRouter = new Hono<{ Bindings: Env }>();
 
@@ -33,6 +34,7 @@ searchRouter.get(
     const { page, limit } = parsePaginationParams(
       c.req.query("page"),
       c.req.query("limit"),
+      Math.min(20, getRequestMaxLimit(c)),
     );
     const result = await search(db, query, page, limit);
 

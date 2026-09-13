@@ -59,7 +59,7 @@ const errorResponseSchema = z.object({
 export const searchDoc = {
   tags,
   description:
-    "Performs a full-text search across all administrative units (provinces, districts, communes, villages) with fuzzy matching support. Returns results with full hierarchical context (breadcrumb and path). Supports pagination via 'page' and 'limit' query parameters (defaults: page=1, limit=20).",
+    "Performs a full-text search across all administrative units (provinces, districts, communes, villages) with fuzzy matching support. Returns results with full hierarchical context (breadcrumb and path). Supports pagination via 'page' and 'limit' query parameters (defaults: page=1, limit=20; maximum 20 for all callers).",
   parameters: zodSchemaToParameters(searchQuerySchema),
   responses: createResponseBuilder()
     .ok({

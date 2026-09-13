@@ -4,8 +4,8 @@ import { DatabaseType } from "~/db";
 /**
  * Get location details by code with full hierarchy context
  */
-export async function getLocationByCode(db: DatabaseType, code: string) {
-  const hierarchy = await getFullHierarchy(db, code);
+export async function getLocationByCode(db: DatabaseType, code: string, childrenLimit = -1) {
+  const hierarchy = await getFullHierarchy(db, code, childrenLimit);
 
   if (!hierarchy.current) {
     return null;

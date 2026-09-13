@@ -1,14 +1,26 @@
 import { eq, and, or, count } from "drizzle-orm";
 import { administrativeUnits } from "~/db/schema";
 import type { Database, AdministrativeUnit, PaginatedResponse } from "~/types";
-import { createPaginatedResponse, calculateOffset } from "~/utils/pagination";
+import { createPaginatedResponse, calculateOffset, type PaginationParams } from "~/utils/pagination";
 
 /**
  * Get all provinces and municipalities (no pagination needed - small dataset)
  */
 export async function getProvinces(
   db: Database,
+  pagination?: PaginationParams,
 ): Promise<PaginatedResponse<AdministrativeUnit>> {
+  const condition = or(
+    eq(administrativeUnits.type, "province"),
+    eq(administrativeUnits.type, "municipality"),
+  );
+  if (pagination) {
+    const { page, limit } = pagination;
+    const [total] = await db.select({ count: count() }).from(administrativeUnits).where(condition);
+    const data = await db.select().from(administrativeUnits).where(condition)
+      .orderBy(administrativeUnits.code).limit(limit).offset(calculateOffset(page, limit));
+    return createPaginatedResponse(data, page, limit, total.count);
+  }
   const provinces = await db
     .select()
     .from(administrativeUnits)

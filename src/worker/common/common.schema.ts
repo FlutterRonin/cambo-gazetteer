@@ -59,5 +59,6 @@ export const paginationQuerySchema = z.object({
     .refine((val) => val > 0 && val <= 100, {
       message: "Limit must be between 1 and 100",
     })
-    .optional(),
+    .optional()
+    .describe("Results per page (default 20). External callers are capped at 20; same-origin callers may request up to 100."),
 });

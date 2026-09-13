@@ -46,7 +46,8 @@ export const villagesQuerySchema = paginationQuerySchema.extend({
 
 export const getProvincesDoc = {
   tags,
-  description: "Returns all provinces and municipalities (ខេត្ត/ក្រុង).",
+  description: "Returns provinces and municipalities (ខេត្ត/ក្រុង). External callers receive paginated results capped at 20; same-origin callers receive the full list.",
+  parameters: zodSchemaToParameters(paginationQuerySchema),
   responses: createResponseBuilder()
     .ok({
       description: "Successfully retrieved provinces and municipalities",

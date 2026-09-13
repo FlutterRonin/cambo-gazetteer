@@ -47,7 +47,7 @@ export const codeParamSchema = z.object({
 export const getLocationByCodeDoc = {
   tags: ["Administrative Codes"],
   description:
-    "Retrieves detailed information about a specific administrative location by its unique code. Returns the location with full hierarchical context including breadcrumb path, ancestors (parent locations), children (sub-locations), siblings (locations at the same level), and children count statistics. Useful for displaying detailed location information and navigation.",
+    "Retrieves detailed information about a specific administrative location by its unique code. Returns the location with full hierarchical context including breadcrumb path, ancestors (parent locations), children (sub-locations), siblings (locations at the same level), and children count statistics. Children are limited to the first 20 in code order for all callers. Use the paginated districts, communes, or villages endpoints for remaining children. Useful for displaying detailed location information and navigation.",
   request: {
     params: z.object({
       code: z

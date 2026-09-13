@@ -4,14 +4,15 @@ import { Loader2 } from "lucide-react";
 import { DirectoryTree } from "../components/DirectoryTree";
 import { SearchBarWithAutocomplete } from "../components/SearchBarWithAutocomplete";
 
+import { fetchApi } from "@/libs/apiClient";
+
 export function ProvinceList() {
   const [provinces, setProvinces] = useState<AdministrativeUnit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/v1/provinces")
-      .then((res) => res.json())
+    fetchApi<{ data: AdministrativeUnit[] }>("/api/v1/provinces")
       .then((data: { data: AdministrativeUnit[] }) => {
         const sorted = data.data.sort(
           (a, b) => Number(a.code) - Number(b.code),

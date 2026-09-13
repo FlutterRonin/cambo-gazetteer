@@ -41,6 +41,8 @@ curl "https://cambo-gazetteer.manethpak.dev/api/v1/code/02"
 curl "https://cambo-gazetteer.manethpak.dev/api/v1/search/autocomplete?q=Phnom"
 ```
 
+**API limits:** External callers (including requests without origin headers) receive at most 20 results per page and share a 30-request/minute limit per IP per Cloudflare location across API routes. Larger valid `limit` values are capped at 20. Provinces support `page` and `limit`; code lookups return at most 20 children (use the administrative list endpoints for the rest). Same-origin browser requests have a 60-request/minute ceiling, with search and autocomplete sharing 30/minute. Search pages and child lists return at most 20 results; the site retains the full list of 25 provinces. The frontend reuses successful responses for five minutes and deduplicates concurrent requests. Search totals are cached for one hour across pages; dataset refreshes must invalidate both response and count caches. Lookup retains its stricter 20-request/minute limit. Origin classification uses `Origin` and `Sec-Fetch-Site`; it is a browser traffic policy, not authentication, since non-browser clients can forge these headers.
+
 **Download raw data:**  
 Visit [cambo-gazetteer.manethpak.dev/data-source](https://cambo-gazetteer.manethpak.dev/data-source) for JSON/Excel datasets.
 

@@ -14,6 +14,9 @@ import { TypeLabel } from "@/components/TypeLabel";
 import { getEnglishName, getKhmerName } from "@/libs/name";
 import { ResponseByCode, Type } from "@/types";
 
+import { fetchApi } from "@/libs/apiClient";
+import { ChildrenLocations } from "@/components/ChildrenLocations";
+
 export function LocationPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
@@ -25,22 +28,20 @@ export function LocationPage() {
   useEffect(() => {
     if (!code) return;
 
+    let active = true;
     setLoading(true);
     setError(null);
 
-    fetch(`/api/v1/code/${code}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Location not found");
-        return res.json();
-      })
+    fetchApi<ResponseByCode>(`/api/v1/code/${code}`)
       .then((data) => {
-        setLocation(data);
+        if (active) setLocation(data);
       })
       .catch((err) => {
         console.error(err);
-        setError(err.message || "Failed to load location");
+        if (active) setError(err.message || "Failed to load location");
       })
-      .finally(() => setLoading(false));
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [code]);
 
   const handleCopyCode = (text: string, id: string) => {
@@ -83,11 +84,10 @@ export function LocationPage() {
             <Search className="w-8 h-8 text-red-400" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900 mb-4">
-            Location Not Found
+            Unable to load location
           </h1>
           <p className="text-slate-600 mb-8">
-            We couldn't find a location with code "{code}". Please check the
-            code and try again.
+            {error || `No location found for code "${code}".`}
           </p>
           <button
             type="button"
@@ -296,42 +296,7 @@ export function LocationPage() {
             </div>
           </div>
 
-          {/* Children Locations */}
-          {location.children && location.children.length > 0 && (
-            <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-8 mb-6">
-              <h3 className="text-xl font-bold text-slate-900 mb-6">
-                {location.childrenCount?.[0]?.type === "district"
-                  ? "Districts"
-                  : location.childrenCount?.[0]?.type === "commune"
-                    ? "Communes"
-                    : location.childrenCount?.[0]?.type === "village"
-                      ? "Villages"
-                      : "Sub-locations"}{" "}
-                ({location.children.length})
-              </h3>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {location.children.map((child) => (
-                  <Link
-                    key={child.code}
-                    to={`/location/${child.code}`}
-                    className="p-4 border border-slate-200 rounded-xl hover:border-brand-300 hover:bg-brand-50 transition-all group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-slate-900 font-khmer truncate group-hover:text-brand-700">
-                          {child.name_km}
-                        </div>
-                        <div className="text-sm text-slate-600 truncate">
-                          {child.name_en}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-brand-500 shrink-0 ml-2" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+          <ChildrenLocations key={location.code} location={location} />
 
           {/* Siblings */}
           {location.siblings && location.siblings.length > 0 && (

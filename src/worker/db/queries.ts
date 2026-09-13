@@ -33,12 +33,13 @@ export async function getAncestors(db: DatabaseType, code: string) {
  * Get immediate descendants (direct children only) for a given administrative unit
  * Returns array with only 1 level of children
  */
-export async function getDescendants(db: DatabaseType, code: string) {
+export async function getDescendants(db: DatabaseType, code: string, limit = -1) {
   const result = await db.all<AdministrativeUnit>(sql`
     SELECT au.code, au.name_km, au.name_en, au.type, au.type_km, au.type_en, au.parent_code
     FROM administrative_units au
     WHERE au.parent_code = ${code}
-    ORDER BY au.name_en
+    ORDER BY au.code
+    LIMIT ${limit}
   `);
 
   return result || [];
@@ -78,11 +79,11 @@ export async function getChildrenCount(db: DatabaseType, code: string) {
  * Get full hierarchy context for a single administrative unit
  * Includes ancestors, descendants, siblings, and the current unit
  */
-export async function getFullHierarchy(db: DatabaseType, code: string) {
+export async function getFullHierarchy(db: DatabaseType, code: string, childrenLimit = -1) {
   const [ancestors, descendants, siblings, current, childrenCount] =
     await Promise.all([
       getAncestors(db, code),
-      getDescendants(db, code),
+      getDescendants(db, code, childrenLimit),
       getSiblings(db, code),
       db.all<AdministrativeUnit>(
         sql`SELECT * FROM administrative_units WHERE code = ${code}`,

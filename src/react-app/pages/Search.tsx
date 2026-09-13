@@ -6,33 +6,38 @@ import { Loader2, Copy, Check, Search, ChevronRight } from "lucide-react";
 import { TypeLabel } from "@/components/TypeLabel";
 import { getEnglishName, getKhmerName } from "@/libs/name";
 
+import { fetchApi, type PageResponse, type PaginationMeta } from "@/libs/apiClient";
+import { Pagination } from "@/components/Pagination";
+
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
+  const requestedPage = Number(searchParams.get("page") || 1);
+  const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [paginate, setPaginate] = useState<{ total: number }>();
+  const [paginate, setPaginate] = useState<PaginationMeta>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+    setResults([]);
+    setPaginate(undefined);
+    setError(null);
+    setLoading(Boolean(query));
     if (query) {
-      setLoading(true);
-      setError(null);
-      fetch(`/api/search?limit=50&q=${encodeURIComponent(query)}`)
-        .then((res) => res.json())
+      fetchApi<PageResponse<SearchResult>>(`/api/search?limit=20&page=${page}&q=${encodeURIComponent(query)}`)
         .then((data) => {
-          if (data.error) throw new Error(data.error);
-          setResults(data.data || []);
+          if (!active) return;
+          setResults(data.data);
           setPaginate(data.pagination);
         })
-        .catch((err) => {
-          console.error(err);
-          setError("Failed to fetch search results");
-        })
-        .finally(() => setLoading(false));
+        .catch((err: Error) => { if (active) setError(err.message); })
+        .finally(() => { if (active) setLoading(false); });
     }
-  }, [query]);
+    return () => { active = false; };
+  }, [query, page]);
 
   const handleSearch = (newQuery: string) => {
     setSearchParams({ q: newQuery });
@@ -137,6 +142,10 @@ export function SearchPage() {
             </p>
           </div>
         ) : null}
+        {!loading && !error && paginate && (
+          <Pagination page={page} totalPages={paginate.totalPages}
+            onPageChange={(nextPage) => setSearchParams({ q: query, page: String(nextPage) })} />
+        )}
       </div>
     </div>
   );

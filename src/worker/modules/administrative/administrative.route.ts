@@ -19,6 +19,8 @@ import {
 } from "./administrative.schema";
 import { sValidator } from "@hono/standard-validator";
 import { addCache } from "~/utils/cache";
+import { paginationQuerySchema } from "~/common/common.schema";
+import { getRequestMaxLimit, isSameOriginRequest } from "~/utils/request-policy";
 
 const administrativeRouter = new Hono<{ Bindings: Env }>();
 
@@ -29,9 +31,13 @@ administrativeRouter.get(
   "/v1/provinces",
   addCache("provinces", "4hr"),
   describeRoute(getProvincesDoc),
+  sValidator("query", paginationQuerySchema),
   async (c) => {
     const db = dbClient(c.env);
-    const result = await getProvinces(db);
+    const pagination = isSameOriginRequest(c) ? undefined : parsePaginationParams(
+      c.req.query("page"), c.req.query("limit"), getRequestMaxLimit(c),
+    );
+    const result = await getProvinces(db, pagination);
     return c.json(result);
   },
 );
@@ -50,6 +56,7 @@ administrativeRouter.get(
     const { page, limit } = parsePaginationParams(
       c.req.query("page"),
       c.req.query("limit"),
+      getRequestMaxLimit(c),
     );
     const db = dbClient(c.env);
 
@@ -72,6 +79,7 @@ administrativeRouter.get(
     const { page, limit } = parsePaginationParams(
       c.req.query("page"),
       c.req.query("limit"),
+      getRequestMaxLimit(c),
     );
     const db = dbClient(c.env);
 
@@ -94,6 +102,7 @@ administrativeRouter.get(
     const { page, limit } = parsePaginationParams(
       c.req.query("page"),
       c.req.query("limit"),
+      getRequestMaxLimit(c),
     );
     const db = dbClient(c.env);
 

@@ -37,6 +37,7 @@ export const PAGINATION_DEFAULTS = {
 export function parsePaginationParams(
   pageStr?: string,
   limitStr?: string,
+  maxLimit: number = PAGINATION_DEFAULTS.MAX_LIMIT,
 ): PaginationParams {
   let page = parseInt(pageStr || String(PAGINATION_DEFAULTS.PAGE), 10);
   let limit = parseInt(limitStr || String(PAGINATION_DEFAULTS.LIMIT), 10);
@@ -53,7 +54,7 @@ export function parsePaginationParams(
     limit = PAGINATION_DEFAULTS.MAX_LIMIT;
   }
 
-  return { page, limit };
+  return { page, limit: Math.min(limit, maxLimit) };
 }
 
 /**
